@@ -26,12 +26,12 @@ OP_TOKEN = P               # 97
 EQ_TOKEN = P + 1           # 98
 
 LR = 1e-3
-WEIGHT_DECAY = 1.0
+WEIGHT_DECAY = 0.0            # Figure 1 uses Adam with NO weight decay
 BETAS = (0.9, 0.98)
 WARMUP_STEPS = 10
 BATCH_SIZE = 512
-NUM_STEPS = 100_000        # start with 10^5; paper uses 10^6 for Fig 1
-LOG_EVERY = 500
+NUM_STEPS = 100_000        # 10^5 probe; will increase to 10^6 if grokking not seen
+LOG_EVERY = 1000
 SEED = 42
 
 # ── Device ────────────────────────────────────────────────────────────────────

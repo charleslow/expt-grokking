@@ -1,0 +1,2 @@
+commit	description	optimizer	weight_decay	num_steps	train_acc_final	val_acc_final	step_train_100	step_val_95	step_val_100	notes
+5e4bfdd	Baseline AdamW wd=1	AdamW	1.0	8000+	1.0	1.0	500	1500	2000	Fast grokking due to wd=1; not matching Figure 1 dynamics (which uses wd=0)
