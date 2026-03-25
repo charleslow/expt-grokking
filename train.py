@@ -31,7 +31,7 @@ BETAS = (0.9, 0.98)
 WARMUP_STEPS = 10
 BATCH_SIZE = 512
 NUM_STEPS = 100_000        # 10^5 probe; will increase to 10^6 if grokking not seen
-LOG_EVERY = 1000
+LOG_EVERY = 5000
 SEED = 42
 
 # ── Device ────────────────────────────────────────────────────────────────────
@@ -189,10 +189,11 @@ def main():
     print()
 
     # Header for structured logging
-    print(f"{'step':>8} | {'train_loss':>10} | {'train_acc':>9} | {'val_loss':>10} | {'val_acc':>9} | {'lr':>10} | {'time':>8}")
-    print("-" * 80)
+    print(f"{'step':>8} | {'train_loss':>10} | {'train_acc':>9} | {'val_loss':>10} | {'val_acc':>9} | {'lr':>10} | {'time':>8} | {'w_norm':>8} | {'step_ms':>8}")
+    print("-" * 110)
 
     t0 = time.time()
+    step_t0 = time.time()
 
     for step in range(NUM_STEPS):
         batch = next(train_iter)
@@ -214,7 +215,18 @@ def main():
             elapsed = time.time() - t0
             current_lr = scheduler.get_last_lr()[0]
 
-            print(f"{step:>8} | {train_loss:>10.4f} | {train_acc:>8.4f}% | {val_loss:>10.4f} | {val_acc:>8.4f}% | {current_lr:>10.6f} | {elapsed:>7.1f}s")
+            # Compute weight norm for diagnostics
+            w_norm = sum(p.data.norm(2).item() ** 2 for p in model.parameters()) ** 0.5
+
+            # Average ms per training step since last log
+            interval = max(step, 1)  # avoid div by zero at step 0
+            if step > 0:
+                avg_step_ms = (time.time() - step_t0) / LOG_EVERY * 1000
+            else:
+                avg_step_ms = 0.0
+            step_t0 = time.time()
+
+            print(f"{step:>8} | {train_loss:>10.4f} | {train_acc:>8.4f}% | {val_loss:>10.4f} | {val_acc:>8.4f}% | {current_lr:>10.6f} | {elapsed:>7.1f}s | {w_norm:>8.1f} | {avg_step_ms:>7.1f}")
             sys.stdout.flush()
 
     # Final evaluation

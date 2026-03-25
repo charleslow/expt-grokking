@@ -32,8 +32,12 @@ The default AdamW wd=1 setting causes much faster grokking.
 ## Validated Insights
 1. **Architecture is correct**: 409,472 non-embedding params matches paper's ~4×10⁵
 2. **wd=1 causes fast grokking**: With AdamW wd=1, val acc hits 100% by step 2000. This matches the paper's observation that weight decay dramatically accelerates generalization.
-3. **Memorization works**: Train acc reaches 100% at ~500 steps, roughly consistent with paper's ~10³.
+3. **Memorization works**: Train acc reaches 100% at ~1000 steps, consistent with paper's ~10³.
+4. **wd=0 correctly delays grokking**: With Adam wd=0, val acc stays near chance (~1-7%) through 24k steps. Memorization at ~1000 steps. Qualitatively matches Figure 1.
+5. **CPU performance degrades with wd=0**: After ~18k steps, per-step time increases 10x (73s→704s per 1000 steps). Correlates with val_loss explosion (8.9→38.9). Root cause likely: weights grow unbounded without WD, causing numerical issues on CPU. Must fix before scaling to 10⁵-10⁶ steps.
 
 ## Current Best
 commit: 5e4bfdd
 metric: train_acc=100%, val_acc=100% (but with wd=1, not matching Figure 1 dynamics)
+
+Note: b4f5c12 (wd=0) shows correct qualitative behavior for Figure 1 but was killed at 24k steps due to slowdown.
