@@ -152,10 +152,10 @@ def evaluate(model, data, device):
 
         for i in range(0, len(data), chunk_size):
             batch = data[i:i+chunk_size].to(device)
-            logits = model(batch)
-            # Loss only on answer token (position 4)
-            answer_logits = logits[:, -1, :]  # last position
-            answer_targets = batch[:, -1]
+            # Feed first 4 tokens [x, op, y, =], predict result from = position
+            logits = model(batch[:, :-1])
+            answer_logits = logits[:, -1, :]  # logits at = position
+            answer_targets = batch[:, -1]     # result token
             loss = F.cross_entropy(answer_logits, answer_targets)
             preds = answer_logits.argmax(dim=-1)
 
@@ -197,11 +197,10 @@ def main():
     for step in range(NUM_STEPS):
         batch = next(train_iter)
 
-        # Forward: input is positions 0..3, predict position 4
-        logits = model(batch)
-        # Loss only on the answer token (last position)
-        answer_logits = logits[:, -1, :]  # (B, vocab)
-        answer_targets = batch[:, -1]     # (B,)
+        # Feed first 4 tokens [x, op, y, =], predict result from = position
+        logits = model(batch[:, :-1])
+        answer_logits = logits[:, -1, :]  # logits at = position
+        answer_targets = batch[:, -1]     # result token
         loss = F.cross_entropy(answer_logits, answer_targets)
 
         optimizer.zero_grad()
