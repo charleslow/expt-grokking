@@ -1,1 +1,24 @@
 *.pdf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.venv/
+.eggs/
+
+# Training artifacts (keep out of git)
+run.log
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.png
+*.jpg
+
+# Replication logs - only track markdown and tsv, not large files
+.replication_logs/*/run.log
+.replication_logs/*/metrics.jsonl
