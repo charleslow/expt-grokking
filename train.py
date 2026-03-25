@@ -38,6 +38,12 @@ SEED = 42
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
+# Flush denormalized floats to zero on CPU — prevents 10x slowdown when weights
+# grow large without weight decay (denormal float ops are 10-100x slower on x86)
+if device.type == "cpu":
+    torch.set_flush_denormal(True)
+    print("Flush denormal: enabled (CPU mode)")
+
 # ── Data: modular division x/y mod 97 ────────────────────────────────────────
 def build_dataset(seed=SEED):
     """Build all equations x/y mod 97 and split 50/50."""

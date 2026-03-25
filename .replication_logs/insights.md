@@ -34,7 +34,8 @@ The default AdamW wd=1 setting causes much faster grokking.
 2. **wd=1 causes fast grokking**: With AdamW wd=1, val acc hits 100% by step 2000. This matches the paper's observation that weight decay dramatically accelerates generalization.
 3. **Memorization works**: Train acc reaches 100% at ~1000 steps, consistent with paper's ~10³.
 4. **wd=0 correctly delays grokking**: With Adam wd=0, val acc stays near chance (~1-7%) through 24k steps. Memorization at ~1000 steps. Qualitatively matches Figure 1.
-5. **CPU performance degrades with wd=0**: After ~18k steps, per-step time increases 10x (73s→704s per 1000 steps). Correlates with val_loss explosion (8.9→38.9). Root cause likely: weights grow unbounded without WD, causing numerical issues on CPU. Must fix before scaling to 10⁵-10⁶ steps.
+5. **CPU performance degrades with wd=0**: After ~18k steps, per-step time increases 10x (73s→704s per 1000 steps). Correlates with val_loss explosion (8.9→38.9). Root cause confirmed (011feae run): weight norm grows exponentially (122→155→278→359), and once w_norm exceeds ~250, step_ms increases from 73→105+ and accelerates. Cause: denormalized floats from large weights + near-zero softmax gradients. Fix: `torch.set_flush_denormal(True)`.
+6. **Diagnostics confirmed slowdown pattern**: 011feae run shows step_ms stable at 73ms through 15k steps, jumps to 105ms at 20k, then becomes unusable. val_loss explodes from 8.9→35.7 at step 20k, matching w_norm growth.
 
 ## Current Best
 commit: 5e4bfdd
