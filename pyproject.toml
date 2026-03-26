@@ -1,0 +1,14 @@
+[project]
+name = "expt-grokking"
+version = "0.1.0"
+description = "Replication of Grokking (Power et al. 2022)"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0",
+    "numpy",
+    "matplotlib",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"

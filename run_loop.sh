@@ -25,7 +25,7 @@ while [ $(date +%s) -lt $END_TIME ]; do
 
     claude -p \
         --allowedTools "Read,Write,Edit,Bash,Glob,Grep" \
-        "Read program.md thoroughly, then execute one full experiment step (sections 0-7). You are iteration $ITERATION." \
+        -- "Read program.md thoroughly, then execute one full experiment step (sections 0-7). You are iteration $ITERATION." \
         || echo "WARNING: claude exited with non-zero status on iteration $ITERATION, continuing..."
 
     echo ""

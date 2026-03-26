@@ -1,0 +1,52 @@
+Starting experiment loop for 4 hours (until 2026-03-26 07:58:24)
+
+=== Iteration 1 | 2026-03-26 03:58:24 | 240 min remaining ===
+
+The background task from the previous run completed — that was the old `wd=1` run which already converged. The iteration 1 work is done. The next iteration should launch the `wd=0` run that's now committed and ready to go.
+
+=== Iteration 1 completed at 2026-03-26 04:17:35 ===
+
+=== Iteration 2 | 2026-03-26 04:17:35 | 220 min remaining ===
+
+## Iteration 2 Summary
+
+**What happened**: Ran Adam wd=0 (commit b4f5c12) for 24k of 100k target steps before killing due to progressive slowdown.
+
+**Key findings**:
+- **Qualitatively matches Figure 1**: Train memorizes at ~1000 steps, val stays at chance (1-7%) through 24k steps
+- **Performance blocker**: Per-step time increased 10x (73ms→704ms per step) starting at step 18k, correlating with val_loss explosion from 8.9→38.9
+- Weight norms at 5k steps were stable (~134), so the explosion happens later
+
+**Decision**: KEEP the wd=0 change (correct for Figure 1). Added timing diagnostics to identify the slowdown root cause.
+
+**Next iteration**: Re-run with diagnostics to pinpoint whether the slowdown is in forward pass, backward pass, or optimizer. Once fixed, scale to 100k+ steps to observe the grokking transition.
+
+=== Iteration 2 completed at 2026-03-26 05:33:55 ===
+
+=== Iteration 3 | 2026-03-26 05:33:55 | 144 min remaining ===
+
+## Iteration 3 Summary
+
+**What was run**: commit 011feae (Adam wd=0 with timing/weight-norm diagnostics), killed at step 20k due to CPU slowdown.
+
+**Key diagnostic findings**:
+| Step | w_norm | step_ms | val_acc |
+|------|--------|---------|---------|
+| 5k   | 134    | 72.3    | 2.1%    |
+| 10k  | 155    | 73.3    | 2.2%    |
+| 15k  | 278    | 73.6    | 2.6%    |
+| 20k  | 359    | 105.3   | 3.9%    |
+
+**Root cause confirmed**: Weight norm grows exponentially → denormalized floats in gradients → 10x CPU slowdown.
+
+**Fix implemented** (commit 42753ca): `torch.set_flush_denormal(True)` — flushes denormals to zero on CPU. Does not change optimization dynamics. Next iteration should be able to run the full 100k steps.
+
+=== Iteration 3 completed at 2026-03-26 06:21:10 ===
+
+=== Iteration 4 | 2026-03-26 06:21:10 | 97 min remaining ===
+
+Stale monitoring notification — iteration 4 is already complete.
+
+=== Iteration 4 completed at 2026-03-26 08:29:56 ===
+
+Loop finished after 4 iterations.

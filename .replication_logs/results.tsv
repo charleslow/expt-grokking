@@ -1,0 +1,5 @@
+commit	description	optimizer	weight_decay	num_steps	train_acc_final	val_acc_final	step_train_100	step_val_95	step_val_100	notes
+5e4bfdd	Baseline AdamW wd=1	AdamW	1.0	8000+	1.0	1.0	500	1500	2000	Fast grokking due to wd=1; not matching Figure 1 dynamics (which uses wd=0)
+b4f5c12	Adam wd=0 (partial 24k/100k)	Adam	0.0	24000	1.0	0.075	1000	N/A	N/A	Killed: progressive slowdown (73s→704s/1k steps); val near chance as expected
+011feae	Adam wd=0 + diagnostics (partial 20k/100k)	Adam	0.0	20000	1.0	0.039	<5000	N/A	N/A	Confirmed: slowdown at w_norm>250, step_ms 73→105+; val_loss 8.9→35.7
+42753ca	Adam wd=0 + flush_denormal (full 100k)	Adam	0.0	100000	1.0	0.978	<5000	~70000	N/A	Grokking reproduced! val_acc: 2%→97.8%. Step_ms stable at 73ms. Need 10⁶ for 100%.
