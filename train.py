@@ -30,8 +30,8 @@ WEIGHT_DECAY = 0.0            # Figure 1 uses Adam with NO weight decay
 BETAS = (0.9, 0.98)
 WARMUP_STEPS = 10
 BATCH_SIZE = 512
-NUM_STEPS = 100_000        # 10^5 probe; will increase to 10^6 if grokking not seen
-LOG_EVERY = 5000
+NUM_STEPS = 1_000_000      # 10^6 — full budget matching Figure 1
+LOG_EVERY = 50_000
 SEED = 42
 
 # ── Device ────────────────────────────────────────────────────────────────────

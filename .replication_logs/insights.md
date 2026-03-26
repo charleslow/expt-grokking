@@ -32,13 +32,13 @@ The default AdamW wd=1 setting causes much faster grokking.
 ## Validated Insights
 1. **Architecture is correct**: 409,472 non-embedding params matches paper's ~4×10⁵
 2. **wd=1 causes fast grokking**: With AdamW wd=1, val acc hits 100% by step 2000. This matches the paper's observation that weight decay dramatically accelerates generalization.
-3. **Memorization works**: Train acc reaches 100% at ~1000 steps, consistent with paper's ~10³.
-4. **wd=0 correctly delays grokking**: With Adam wd=0, val acc stays near chance (~1-7%) through 24k steps. Memorization at ~1000 steps. Qualitatively matches Figure 1.
-5. **CPU performance degrades with wd=0**: After ~18k steps, per-step time increases 10x (73s→704s per 1000 steps). Correlates with val_loss explosion (8.9→38.9). Root cause confirmed (011feae run): weight norm grows exponentially (122→155→278→359), and once w_norm exceeds ~250, step_ms increases from 73→105+ and accelerates. Cause: denormalized floats from large weights + near-zero softmax gradients. Fix: `torch.set_flush_denormal(True)`.
-6. **Diagnostics confirmed slowdown pattern**: 011feae run shows step_ms stable at 73ms through 15k steps, jumps to 105ms at 20k, then becomes unusable. val_loss explodes from 8.9→35.7 at step 20k, matching w_norm growth.
+3. **Memorization works**: Train acc reaches 100% at ~1000-5000 steps, consistent with paper's ~10³.
+4. **wd=0 correctly delays grokking**: With Adam wd=0, val acc stays near chance (~1-4%) through ~20k steps, then rises to 97.8% by 100k steps. Qualitatively matches Figure 1's S-curve.
+5. **flush_denormal fixes CPU slowdown**: `torch.set_flush_denormal(True)` keeps step_ms at 73ms even with w_norm=380, vs previous 10x slowdown at w_norm>250.
+6. **Weight norm dynamics**: w_norm grows rapidly from 122→359 in first 20k steps (no wd), then stabilizes ~360-380. The rapid growth phase corresponds to a val_loss spike.
+7. **Grokking reproduced at 100k steps**: 42753ca achieves 97.8% val acc at 100k steps with wd=0. The grokking curve shape (memorize→plateau→generalize) matches the paper. However, our grokking onset (~25k steps) is earlier than the paper's (~10⁵ steps).
+8. **Val acc may plateau below 100% at 100k**: The rate of improvement slowed significantly in the last 20k steps (96.7%→97.8%). Need 10⁶ steps to see if it reaches 100%.
 
 ## Current Best
-commit: 5e4bfdd
-metric: train_acc=100%, val_acc=100% (but with wd=1, not matching Figure 1 dynamics)
-
-Note: b4f5c12 (wd=0) shows correct qualitative behavior for Figure 1 but was killed at 24k steps due to slowdown.
+commit: 42753ca
+metric: train_acc=100%, val_acc=97.8% (wd=0, 100k steps — grokking dynamics match Figure 1 qualitatively)
